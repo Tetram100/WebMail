@@ -7,12 +7,54 @@
 	<script src="Assets/jquery-1.11.2.js"></script>
 	<link href="Assets/bootstrap.min.css" rel="stylesheet">
 	<script src="Assets/bootstrap.min.js"></script>
+	<script src="Assets/perso.js"></script>
 </head>
 <body>
-	<div class = "panel panel-default">
-	<div class="panel-body">
-		<div class="alert alert-success">
-			<h1>It works</h1>
+	<div class = "container well">
+		<div class = "panel panel-default">
+		<div class="panel-heading">
+			<div class="btn-group pull-right">
+				<button class="btn btn-warning btn-xs pull-right" style="display: inline-block;" onclick="reset_form();">Reset</button>
+			</div>
+			<h4 class="panel-title">Send an email</h3>
+			</div>
+		<div class="panel-body">
+			<form accept-charset="UTF-8" id="mail_form" action="/send_email" class="form-horizontal" method="post">
+				<div class="form-group">
+					<label class="col-lg-2 control-label" for="from">From</label>
+					<div class="col-lg-4">
+						<input class="form-control" id="from" name="from" placeholder="Enter the email address" type="email" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-lg-2 control-label" for="to">To</label>
+					<div class="col-lg-4">
+						<input class="form-control" id="to" name="to" placeholder="Enter the email address" type="email" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-lg-2 control-label" for="server">SMTP Server</label>
+					<div class="col-lg-4">
+						<input class="form-control" id="server" name="server" placeholder="Enter the SMTP Server address" type="text" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-lg-2 control-label" for="subject">Subject</label>
+					<div class="col-lg-4">
+						<input class="form-control" id="subject" name="subject" placeholder="Enter the subject of the email" type="text" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-lg-2 control-label" for="message">Message</label>
+					<div class="col-lg-10">
+						<textarea class="form-control" id="message" name="message" placeholder="Enter your message" type="text" rows="10"/></textarea>
+					</div>
+				</div>
+				<hr>												
+				<div class="form-actions text-center">
+					<input class="btn btn-primary" name="Submit" type="submit" value="Send the email" />
+				</div>
+			</form>
 		</div>
 	</div>
 </body>
