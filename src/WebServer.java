@@ -13,10 +13,7 @@ import java.net.Socket;
 
 public class WebServer {
 
-	/**
-	 * @param args
-	 */
-	int port = 2037;
+	int port = 2040;
 
 	protected void start() {
 	    ServerSocket s;
@@ -103,17 +100,96 @@ public class WebServer {
 	            		}
 	            	}
 	            } else if (request.startsWith("POST")){
-
+	            	//We find the url
+	            	String head[] = request.split(" ");
+	            	String url = head[1];
+	            	if (url.startsWith("/")){
+            			url = url.substring(1);
+            		}
+	            	System.out.println("The user post on the page " + url);
 	            	
-	            } else {
-	            	connection.close();
-	            }
-	            
+	            	//We download the post body with the exact number of byte from the Content-Length field
+	            	String temp;
+	            	int contentLength = 0;
+	            	while (!(temp = input.readLine()).equals("")){
+	            	    if (temp.startsWith("Content-Length:")){
+	            	    	String arr[] = temp.split(" ");
+	            	    	contentLength = Integer.parseInt(arr[1]);
+	            	    }
+	            	}
+	            	StringBuilder requestContent = new StringBuilder();
+	            	for (int i = 0; i < contentLength; i++)
+	            	{
+	            	   requestContent.append((char) input.read());
+	            	}
+	            	String body = requestContent.toString();
+	            	String request_cut[] = body.split("&");
+	            	
+	            	//The case it's for sending an email
+	            	if (url.equals("send_email")){
+	            		
+	            		//Default values for fields
+		            	String from = "default@kth.se";
+		            	String to = "default@kth.se";
+		            	String server = "smtp@kth.se";
+		            	String subject = "Message from test Webmail";
+		            	String message = "This is a default message.";
+	     	
+		            	//For each field we decode the post request and change the default value if it's not empty
+		            	for(String param : request_cut){
+		                    if (param.startsWith("from")){
+		                    	String block_from[] = param.split("=",2);
+		                    	if (block_from.length == 2){
+		                    		from = java.net.URLDecoder.decode(block_from[1], "UTF-8");
+		                    	}
+		                    }
+		                    if (param.startsWith("to")){
+		                    	String block_to[] = param.split("=",2);
+		                    	if (block_to.length == 2){
+		                    		to = java.net.URLDecoder.decode(block_to[1], "UTF-8");
+		                    	}
+		                    }
+		                    if (param.startsWith("server")){
+		                    	String block_server[] = param.split("=",2);
+		                    	if (block_server.length == 2){
+		                    		server = java.net.URLDecoder.decode(block_server[1], "UTF-8");
+		                    	}
+		                    }
+		                    if (param.startsWith("subject")){
+		                    	String block_subject[] = param.split("=",2);
+		                    	if (block_subject.length == 2){
+		                    		subject = java.net.URLDecoder.decode(block_subject[1], "UTF-8");
+		                    	}
+		                    }
+		                    if (param.startsWith("message")){
+		                    	String block_message[] = param.split("=",2);
+		                    	if (block_message.length == 2){
+		                    		message = java.net.URLDecoder.decode(block_message[1], "UTF-8");
+		                    	}
+		                    }
+		                }
+		            	//We send the email
+		            	Email new_message = new Email(from, to, server, subject, message);
+		            	System.out.println("We send a new message:");
+		            	System.out.println("From: " + from + ", To: " + to + ", server: " + server);
+		            	System.out.println("Subject: " + subject);
+		            	System.out.println("Message: " + message);
+		            	String response = new_message.sendEmail();
+		            	System.out.println("Response of the sending :" + response);
+		            	//We send the reponse
+		            	writeSendingReponse(poutput, response);
+		            	output.flush();
+	        	        connection.close();	
+	            	} else {
+            			System.out.println("Page doesn't exist");
+            			error = true;
+            			writeError(poutput, connection, 404, "Not Found", "This page doesn't exist. Please check the url.");           		
+	            	}
+	            }  
 	            if (error == true){
         			output.flush();
         	        connection.close();	            	
-	            }
-	            
+	            }     
 	    	} catch (Exception e) {
 	            System.out.println("Error: " + e);
 	        }
@@ -136,6 +212,34 @@ public class WebServer {
 		poutput.println(error_message);
 		poutput.println("</body>");
 		poutput.println("</html>");
+	}
+	
+	private static void writeSendingReponse(PrintStream poutput, String response){
+		poutput.println("HTTP/1.0 200 OK");
+		poutput.println("Content-Type: text/html; ; charset=utf-8");
+		poutput.println("");
+		poutput.println("<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>");
+		poutput.println("<html xmlns='http://www.w3.org/1999/xhtml'>");
+		poutput.println("<head>");
+		poutput.println("<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />");
+		poutput.println("<link rel='icon' type='image/x-icon' href='Assets/favicon.ico' />");
+		poutput.println("<script src='Assets/jquery-1.11.2.js'></script>");
+		poutput.println("<link href='Assets/bootstrap.min.css' rel='stylesheet'>");
+		poutput.println("<script src='Assets/bootstrap.min.js'></script>");
+		poutput.println("<title> Webmail</title>");
+		poutput.println("</head>");
+		poutput.println("<body>");
+		poutput.println("<div class = 'container well'>");
+		if (response.equals("OK")){
+			poutput.println("<div class='alert alert-success'>");
+		} else {
+			poutput.println("<div class='alert alert-danger'>");
+		}
+		poutput.println(response);
+		poutput.println("</div>");
+		poutput.println("</div>");
+		poutput.println("</body>");
+		poutput.println("</html>");	
 	}
 	
 	//To find the right content type for the file extension
