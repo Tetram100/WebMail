@@ -13,7 +13,7 @@ import java.net.Socket;
 
 public class WebServer {
 
-	int port = 2040;
+	int port = 2000;
 
 	protected void start() {
 	    ServerSocket s;
@@ -131,7 +131,7 @@ public class WebServer {
 	            		//Default values for fields
 		            	String from = "default@kth.se";
 		            	String to = "default@kth.se";
-		            	String server = "smtp@kth.se";
+		            	String server = "";
 		            	String subject = "Message from test Webmail";
 		            	String message = "This is a default message.";
 	     	
@@ -139,31 +139,31 @@ public class WebServer {
 		            	for(String param : request_cut){
 		                    if (param.startsWith("from")){
 		                    	String block_from[] = param.split("=",2);
-		                    	if (block_from.length == 2){
+		                    	if (block_from.length == 2 && (!block_from[1].equals(""))){
 		                    		from = java.net.URLDecoder.decode(block_from[1], "UTF-8");
 		                    	}
 		                    }
 		                    if (param.startsWith("to")){
 		                    	String block_to[] = param.split("=",2);
-		                    	if (block_to.length == 2){
+		                    	if (block_to.length == 2 && (!block_to[1].equals(""))){
 		                    		to = java.net.URLDecoder.decode(block_to[1], "UTF-8");
 		                    	}
 		                    }
 		                    if (param.startsWith("server")){
 		                    	String block_server[] = param.split("=",2);
-		                    	if (block_server.length == 2){
+		                    	if (block_server.length == 2  && (!block_server[1].equals(""))){
 		                    		server = java.net.URLDecoder.decode(block_server[1], "UTF-8");
 		                    	}
 		                    }
 		                    if (param.startsWith("subject")){
 		                    	String block_subject[] = param.split("=",2);
-		                    	if (block_subject.length == 2){
+		                    	if (block_subject.length == 2 && (!block_subject[1].equals(""))){
 		                    		subject = java.net.URLDecoder.decode(block_subject[1], "UTF-8");
 		                    	}
 		                    }
 		                    if (param.startsWith("message")){
 		                    	String block_message[] = param.split("=",2);
-		                    	if (block_message.length == 2){
+		                    	if (block_message.length == 2 && (!block_message[1].equals(""))){
 		                    		message = java.net.URLDecoder.decode(block_message[1], "UTF-8");
 		                    	}
 		                    }
@@ -232,10 +232,11 @@ public class WebServer {
 		poutput.println("<div class = 'container well'>");
 		if (response.equals("OK")){
 			poutput.println("<div class='alert alert-success'>");
+			poutput.println("The email has been successfully sent.");
 		} else {
 			poutput.println("<div class='alert alert-danger'>");
+			poutput.println("ERROR : " + response);
 		}
-		poutput.println(response);
 		poutput.println("</div>");
 		poutput.println("</div>");
 		poutput.println("</body>");
