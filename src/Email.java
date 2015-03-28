@@ -28,7 +28,7 @@ public class Email {
 	
 	//Method for sending an email
 	public String sendEmail(){
-		int smtp_port = 25;
+		int smtp_port = 1025;
 		String default_server = "127.0.0.1";
 
 		boolean error = true;
@@ -42,39 +42,33 @@ public class Email {
 			} else {
 				smtp_server = this.server;
 			}
-			System.out.println("The SMTP server uses is: " + smtp_server);
+			System.out.println("The SMTP server used is: " + smtp_server);
 			//We open the connection
 			smtpSocket = new Socket(smtp_server, smtp_port);
             BufferedReader input = new BufferedReader(new InputStreamReader(smtpSocket.getInputStream()));
             OutputStream output = new BufferedOutputStream(smtpSocket.getOutputStream());
-            PrintStream poutput = new PrintStream(output);
-            
+            PrintStream poutput = new PrintStream(output, true, "UTF-8");
             //We send the message to the SMTP server
-            System.out.println(input.readLine());
 			poutput.println("HELO client");
-			output.flush();
 			poutput.println("MAIL FROM: <" + this.from + ">");
-			output.flush();
-			System.out.println(this.to);
 			poutput.println("RCPT TO: <" + this.to + ">");
-			output.flush();
 			poutput.println("DATA");
-			output.flush();
 			poutput.println("From: " + this.from);
 			poutput.println("To: " + this.to);
 			poutput.println("Subject: " + this.subject);
+			poutput.println("Content-Type: text/plain; charset='ISO-8859-1'");
+			poutput.println("Content-Transfer-Encoding: Base64");
+			poutput.println("MIME-Version: 1.0");
 			poutput.println("");
-			poutput.println(this.message);
+			poutput.println(encode(this.message));
 			poutput.println(".");
-			output.flush();
 			poutput.println("QUIT");
-			output.flush();
 			//We look at the server response
 			String temp;
 			while (!((temp = input.readLine()) == null)){
 				System.out.println(temp);
 				//We look if it's OK or we had a problem
-				if(temp.indexOf("Ok: queued") != -1){
+				if(temp.indexOf("221 Ok") != -1){
 					error = false;
 				} else if (temp.indexOf("421") != -1){
 					error_message = writeError(421, "Service not available.");
@@ -104,8 +98,61 @@ public class Email {
 	
 	//To write the error message
 	private String writeError(int code_error, String error_message){
-		String return_message = "ERROR " + code_error + ": " + error_message + "\r\n The message has not been sent. An error occured with the SMTP server. Please check that the server is up and works.";
+		String return_message = "ERROR " + code_error + ": " + error_message + "<br><br> The message has not been sent. An error occured with the SMTP server. Please check that the server is up and works.";
 		return return_message;
+	}
+	
+	//Return the message encoded in ISO-8859-1 Base64 and ready to be sent
+	private String encode(String message){
+		String iso_message = isoencode(message);
+		String base64_message = base64encode(iso_message);
+		return base64_message;
+	}
+	
+	//Return the string in ISO-8859-1
+	private String isoencode( String message){
+		String iso_message = "";
+		try{
+			iso_message = new String(message.getBytes("ISO-8859-1"), "ISO-8859-1");
+		} catch (Exception e) {
+			System.out.println("Error: " + e);
+		}
+		return iso_message;
+	}
+	
+	//Return the string in base64
+	private String base64encode(String message){
+		String base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+		String r = "", p = "";
+		int c = message.length() % 3;
+	 
+		// add a right zero pad to make this string a multiple of 3 characters
+		if (c > 0) {
+		    for (; c < 3; c++) {
+			p += "=";
+			message += "\0";
+		    }
+		}
+	 
+		// increment over the length of the string, three characters at a time
+		for (c = 0; c < message.length(); c += 3) {
+	 
+		    // we add newlines after every 76 output characters, according to
+		    // the MIME specs
+		    if (c > 0 && (c / 3 * 4) % 76 == 0)
+			r += "\r\n";
+	 
+		    // these three 8-bit (ASCII) characters become one 24-bit number
+		    int n = (message.charAt(c) << 16) + (message.charAt(c + 1) << 8) + (message.charAt(c + 2));
+	 
+		    // this 24-bit number gets separated into four 6-bit numbers
+		    int n1 = (n >> 18) & 63, n2 = (n >> 12) & 63, n3 = (n >> 6) & 63, n4 = n & 63;
+	 
+		    // those four 6-bit numbers are used as indices into the base64
+		    // character list
+		    r += "" + base64chars.charAt(n1) + base64chars.charAt(n2) + base64chars.charAt(n3) + base64chars.charAt(n4);
+		}
+		return r.substring(0, r.length() - p.length()) + p;
 	}
 	
 	private String getMxRecord(String email, String default_server){
