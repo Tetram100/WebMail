@@ -16,6 +16,7 @@ public class WebServer {
 	int port = 2001;
 
 	protected void start() {
+		String www = "Web/";
 		ServerSocket s;
 
 		System.out.println("The Webserver is starting up on port " + port);
@@ -76,6 +77,7 @@ public class WebServer {
 						if (url.startsWith("/")){
 							url = url.substring(1);
 						}
+						url = www + url;
 						String filePath = url;
 						File f = new File(filePath);
 						//We check if the page exist

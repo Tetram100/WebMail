@@ -29,7 +29,7 @@ public class Email {
 	//Method for sending an email
 	public String sendEmail(){
 		int smtp_port = 1025;
-		String default_server = "127.0.0.1";
+		String default_server = "mail.ik2213.lab";
 
 		boolean error = true;
 		String error_message = "";
@@ -47,7 +47,7 @@ public class Email {
 			smtpSocket = new Socket(smtp_server, smtp_port);
             BufferedReader input = new BufferedReader(new InputStreamReader(smtpSocket.getInputStream()));
             OutputStream output = new BufferedOutputStream(smtpSocket.getOutputStream());
-            PrintStream poutput = new PrintStream(output, true, "UTF-8");
+            PrintStream poutput = new PrintStream(output, true, "ISO-8859-15");
             //We send the message to the SMTP server
 			poutput.println("HELO client");
 			poutput.println("MAIL FROM: <" + this.from + ">");
@@ -55,8 +55,9 @@ public class Email {
 			poutput.println("DATA");
 			poutput.println("From: " + this.from);
 			poutput.println("To: " + this.to);
-			poutput.println("Subject: " + this.subject);
-			poutput.println("Content-Type: text/plain; charset='ISO-8859-1'");
+			String encode_subject = "Subject: =?ISO-8859-15?B?" + base64encode(this.subject) + "?=";
+			poutput.println(encode_subject);
+			poutput.println("Content-Type: text/plain; charset='ISO-8859-15'");
 			poutput.println("Content-Transfer-Encoding: Base64");
 			poutput.println("MIME-Version: 1.0");
 			poutput.println("");
@@ -102,22 +103,10 @@ public class Email {
 		return return_message;
 	}
 	
-	//Return the message encoded in ISO-8859-1 Base64 and ready to be sent
+	//Return the message encoded in Base64 and ready to be sent
 	private String encode(String message){
-		String iso_message = isoencode(message);
-		String base64_message = base64encode(iso_message);
+		String base64_message = base64encode(message);
 		return base64_message;
-	}
-	
-	//Return the string in ISO-8859-1
-	private String isoencode( String message){
-		String iso_message = "";
-		try{
-			iso_message = new String(message.getBytes("ISO-8859-1"), "ISO-8859-1");
-		} catch (Exception e) {
-			System.out.println("Error: " + e);
-		}
-		return iso_message;
 	}
 	
 	//Return the string in base64
