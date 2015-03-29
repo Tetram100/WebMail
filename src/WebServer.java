@@ -9,12 +9,22 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 
 
 public class WebServer {
 
-	int port = 2001;
-
+	int port;
+	public ArrayList<Email> delayed = null;
+	
+	public WebServer(int port, ArrayList<Email> delayed) {
+		this.port = port;
+		this.delayed = delayed;
+	}
+	
 	protected void start() {
 		String www = "Web/";
 		ServerSocket s;
@@ -72,6 +82,10 @@ public class WebServer {
 					if (url.indexOf("..")!=-1 || url.indexOf("/.ht")!=-1 || url.endsWith("~")) {
 						error = true;
 						writeError(poutput, connection, 403, "Forbidden", "You don't have access to this page.");
+					} else if (url.equals("/admin")){
+						sendAdmin(poutput);
+						output.flush();
+						connection.close();	
 					} else {
 						//We delete the "/" in the url
 						if (url.startsWith("/")){
@@ -90,7 +104,7 @@ public class WebServer {
 							//We send the page
 							InputStream page = new FileInputStream(f);
 							//We write the HTTP header
-							poutput.println("HTTP/1.0 200 OK");
+							poutput.println("HTTP/1.1 200 OK");
 							String extension = url.replaceAll("^.*\\.([^.]+)$", "$1");
 							poutput.println("Content-Type: " + contentType(extension) + "; ; charset=utf-8");
 							//With the blank line we finish the header
@@ -130,10 +144,12 @@ public class WebServer {
 					//The case it's for sending an email
 					if (url.equals("send_email")){
 						boolean false_form = false;
+						boolean now = true;
 
 						//Default values for fields
 						String from = "default@kth.se";
 						String to = "default@kth.se";
+						Date sending_time = new Date();
 						String server = "";
 						String subject = "Message from test Webmail";
 						String message = "This is a default message.";
@@ -156,6 +172,18 @@ public class WebServer {
 									false_form = true;
 								}
 							}
+							if (param.startsWith("sending_time")){
+								String block_date[] = param.split("=",2);
+								if (block_date.length == 2 && (!block_date[1].equals(""))){
+									now = false;
+									String time_string = java.net.URLDecoder.decode(block_date[1], "UTF-8");
+									DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+									sending_time = formatter.parse(time_string);
+									if (sending_time.before(new Date())){
+										now = true;
+									}
+								}
+							}							
 							if (param.startsWith("server")){
 								String block_server[] = param.split("=",2);
 								if (block_server.length == 2  && (!block_server[1].equals(""))){
@@ -184,15 +212,23 @@ public class WebServer {
 							writeError(poutput, connection, 400, "Bad request", "Please fill in the field in the form.");
 						} else {
 							//We send the email
-							Email new_message = new Email(from, to, server, subject, message);
+							Email new_message = new Email(from, to, sending_time, server, subject, message);
 							System.out.println("We send a new message:");
+							System.out.println("The message will be sent at :" + sending_time);
 							System.out.println("From: " + from + ", To: " + to + ", server: " + server);
 							System.out.println("Subject: " + subject);
 							System.out.println("Message: " + message);
-							String response = new_message.sendEmail();
-							System.out.println("Response of the sending :" + response);
-							//We send the reponse
-							writeSendingReponse(poutput, response);
+							
+							if (now ==true){
+								String response = new_message.sendEmail();
+								System.out.println("Response of the sending :" + response);
+								//We send the response
+								writeSendingReponse(poutput, response);
+							} else {
+								this.delayed.add(new_message);
+								System.out.println("Sending planned");
+								writeReportedEmail(poutput, sending_time);
+							}
 							output.flush();
 							connection.close();	
 						}
@@ -214,7 +250,7 @@ public class WebServer {
 	}
 
 	private static void writeError(PrintStream poutput, Socket connection, int code_error, String error_title, String error_message){
-		poutput.println("HTTP/1.0 " + code_error + " " + error_title);
+		poutput.println("HTTP/1.1 " + code_error + " " + error_title);
 		poutput.println("Content-Type: text/html; ; charset=utf-8");
 		poutput.println("");
 		poutput.println("<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>");
@@ -231,7 +267,7 @@ public class WebServer {
 	}
 
 	private static void writeSendingReponse(PrintStream poutput, String response){
-		poutput.println("HTTP/1.0 200 OK");
+		poutput.println("HTTP/1.1 200 OK");
 		poutput.println("Content-Type: text/html; ; charset=utf-8");
 		poutput.println("");
 		poutput.println("<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>");
@@ -259,6 +295,76 @@ public class WebServer {
 		poutput.println("</html>");	
 	}
 
+	private void sendAdmin(PrintStream poutput){
+		poutput.println("HTTP/1.1 200 OK");
+		poutput.println("Content-Type: text/html; ; charset=utf-8");
+		poutput.println("");
+		poutput.println("<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>");
+		poutput.println("<html xmlns='http://www.w3.org/1999/xhtml'>");
+		poutput.println("<head>");
+		poutput.println("<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />");
+		poutput.println("<link rel='icon' type='image/x-icon' href='Assets/favicon.ico' />");
+		poutput.println("<script src='Assets/jquery-1.11.2.js'></script>");
+		poutput.println("<link href='Assets/bootstrap.min.css' rel='stylesheet'>");
+		poutput.println("<script src='Assets/bootstrap.min.js'></script>");
+		poutput.println("<title> Webmail</title>");
+		poutput.println("</head>");
+		poutput.println("<body>");
+		poutput.println("<div class = 'container well'>");
+		poutput.println("<h1>Admin page</h1>");
+		poutput.println("<hr>");
+		poutput.println("<table class='table'>");
+		poutput.println("<thead>");
+		poutput.println("<tr>");
+		poutput.println("<th>From</th>");
+		poutput.println("<th>To</th>");
+		poutput.println("<th>Subject</th>");
+		poutput.println("<th>Submit time</th>");
+		poutput.println("<th>Sending time</th>");
+		poutput.println("</tr>");
+		poutput.println("</thead>");
+		poutput.println("<tbody>");
+		for (Email email : this.delayed) {
+			poutput.println("<tr>");
+			poutput.println("<td>"+email.from+"</td>");
+			poutput.println("<td>"+email.to+"</td>");
+			poutput.println("<td>"+email.subject+"</td>");
+			poutput.println("<td>"+email.creation_time+"</td>");
+			poutput.println("<td>"+email.sending_time+"</td>");
+			poutput.println("</tr>");
+		}
+		poutput.println("</tbody>");
+		poutput.println("</table>");
+		poutput.println("</div>");
+		poutput.println("</body>");
+		poutput.println("</html>");	
+	}
+	
+	
+	private static void writeReportedEmail(PrintStream poutput, Date sending_time){
+		poutput.println("HTTP/1.1 200 OK");
+		poutput.println("Content-Type: text/html; ; charset=utf-8");
+		poutput.println("");
+		poutput.println("<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>");
+		poutput.println("<html xmlns='http://www.w3.org/1999/xhtml'>");
+		poutput.println("<head>");
+		poutput.println("<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />");
+		poutput.println("<link rel='icon' type='image/x-icon' href='Assets/favicon.ico' />");
+		poutput.println("<script src='Assets/jquery-1.11.2.js'></script>");
+		poutput.println("<link href='Assets/bootstrap.min.css' rel='stylesheet'>");
+		poutput.println("<script src='Assets/bootstrap.min.js'></script>");
+		poutput.println("<title> Webmail</title>");
+		poutput.println("</head>");
+		poutput.println("<body>");
+		poutput.println("<div class = 'container well'>");
+		poutput.println("<div class='alert alert-success'>");
+		poutput.println("The email has been transmited to the server and will be sent at: " + sending_time);
+		poutput.println("</div>");
+		poutput.println("</div>");
+		poutput.println("</body>");
+		poutput.println("</html>");	
+	}	
+	
 	//To find the right content type for the file extension
 	private String contentType(String extension) {
 		if (extension.equals("js")){

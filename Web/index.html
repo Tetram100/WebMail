@@ -6,7 +6,10 @@
 	<link rel="icon" type="image/x-icon" href="Assets/favicon.ico" />
 	<script src="Assets/jquery-1.11.2.js"></script>
 	<link href="Assets/bootstrap.min.css" rel="stylesheet">
+	<link href="Assets/datepicker/bootstrap-datetimepicker.css" rel="stylesheet">
 	<script src="Assets/bootstrap.min.js"></script>
+	<script src="Assets/datepicker/moment.js"></script>	
+	<script src="Assets/datepicker/bootstrap-datetimepicker.min.js"></script>
 	<script src="Assets/perso.js"></script>
 </head>
 <body>
@@ -14,7 +17,8 @@
 		<div class = "panel panel-default">
 			<div class="panel-heading">
 				<div class="btn-group pull-right">
-					<button class="btn btn-warning btn-xs pull-right" style="display: inline-block;" onclick="reset_form();">Reset</button>
+					<button class="btn btn-warning btn-xs" style="display: inline-block;" onclick="reset_form();">Reset</button>
+					<a href="admin" class="btn btn-success btn-xs" style="display: inline-block;" onclick="reset_form();">Admin</a>
 				</div>
 				<h4 class="panel-title">Send an email</h3>
 			</div>
@@ -30,6 +34,15 @@
 						<label class="col-lg-2 control-label" for="to">To</label>
 						<div class="col-lg-4">
 							<input class="form-control" id="to" name="to" placeholder="Enter the email address" type="email" />
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-lg-2 control-label" for="to">Sending time</label>
+						<div class="col-lg-4">
+  							<input type="text" id="sending_time" class="form-control" placeholder="Select the sending time" name="sending_time">
+						</div>
+						<div class="col-lg-6" style="vertical-align: middle; padding-top: 7px;">
+							If you write nothing it will be send now.
 						</div>
 					</div>
 					<div class="form-group">
@@ -63,4 +76,14 @@
 	</div>
 	<p class="text-center">Guillaume Dhainaut - Thomas Fouqueray</p>
 </body>
+
+<script type="text/javascript">
+$(function(){
+   $('#sending_time').datetimepicker({
+      format: 'DD/MM/YYYY H:mm:ss',
+      minDate: new Date()
+    });
+});
+</script>
+
 </html>

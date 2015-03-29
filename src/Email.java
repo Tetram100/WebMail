@@ -1,4 +1,5 @@
 import java.net.Socket;
+import java.util.Date;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -13,14 +14,18 @@ public class Email {
 
 	String from;
 	String to;
+	Date creation_time;
+	Date sending_time;
 	String server;
 	String subject;
 	String message;
 	
 	//Builder
-	public Email (String from, String to, String server, String subject, String message){
+	public Email (String from, String to, Date sending_time, String server, String subject, String message){
 		this.from = from;
 		this.to = to;
+		this.creation_time = new Date();
+		this.sending_time = sending_time;
 		this.server = server;
 		this.subject = subject;
 		this.message = message;
