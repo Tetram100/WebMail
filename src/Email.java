@@ -92,7 +92,7 @@ public class Email {
 		} catch (Exception e) {
 		      System.out.println("Error: " + e);
 		      error = true;
-		      error_message = "Error : " + e + "\r\n The message has not been sent. An error occured with the SMTP server. Please check that the server is up and works.";
+		      error_message = "Error : " + e + "<br><br> The message has not been sent. An error occured with the SMTP server. Please check that the server is up and works.";
 		}
 		
 		if (error == true){
@@ -114,41 +114,45 @@ public class Email {
 		return base64_message;
 	}
 	
-	//Return the string in base64
+	//Return the string in base64 following the base64 algorithm
 	private String base64encode(String message){
 		String base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-		String r = "", p = "";
-		int c = message.length() % 3;
+		String result = "";
+		String padding = "";
+		int remainder = message.length() % 3;
 	 
 		// add a right zero pad to make this string a multiple of 3 characters
-		if (c > 0) {
-		    for (; c < 3; c++) {
-			p += "=";
+		if (remainder > 0) {
+		    for (; remainder < 3; remainder++) {
+			padding += "=";
 			message += "\0";
 		    }
 		}
 	 
-		// increment over the length of the string, three characters at a time
-		for (c = 0; c < message.length(); c += 3) {
+		// It takes the original binary data and operates on it by dividing it into tokens of three bytes
+		for (remainder = 0; remainder < message.length(); remainder += 3) {
 	 
-		    // we add newlines after every 76 output characters, according to
-		    // the MIME specs
-		    if (c > 0 && (c / 3 * 4) % 76 == 0)
-			r += "\r\n";
+		    // Newline characters are inserted to avoid exceeding any mail server's line length limit
+		    if (remainder > 0 && (remainder / 3 * 4) % 76 == 0)
+			result += "\r\n";
 	 
 		    // these three 8-bit (ASCII) characters become one 24-bit number
-		    int n = (message.charAt(c) << 16) + (message.charAt(c + 1) << 8) + (message.charAt(c + 2));
+		    int n = (message.charAt(remainder) << 16) + (message.charAt(remainder + 1) << 8) + (message.charAt(remainder + 2));
 	 
-		    // this 24-bit number gets separated into four 6-bit numbers
-		    int n1 = (n >> 18) & 63, n2 = (n >> 12) & 63, n3 = (n >> 6) & 63, n4 = n & 63;
+		    // We split the three bytes of n (24bits) into four numbers of six bits
+		    int n1 = (n >> 18) & 63;
+		    int n2 = (n >> 12) & 63;
+		    int n3 = (n >> 6) & 63;
+		    int n4 = n & 63;
 	 
-		    // those four 6-bit numbers are used as indices into the base64
-		    // character list
-		    r += "" + base64chars.charAt(n1) + base64chars.charAt(n2) + base64chars.charAt(n3) + base64chars.charAt(n4);
+		    // those four 6-bit numbers are used as indices into the 64 ASCII characters table
+		    result += "" + base64chars.charAt(n1) + base64chars.charAt(n2) + base64chars.charAt(n3) + base64chars.charAt(n4);
 		}
-		return r.substring(0, r.length() - p.length()) + p;
+		//We add the "=" of p for padding after removing the p last characters
+		return result.substring(0, result.length() - padding.length()) + padding;
 	}
 	
+	//We get the MX record from the client address
 	private String getMxRecord(String email, String default_server){
 		try{
 			String email_split[] = email.split("@");

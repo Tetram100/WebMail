@@ -19,12 +19,12 @@ public class WebServer {
 
 	int port;
 	public ArrayList<Email> delayed = null;
-	
+
 	public WebServer(int port, ArrayList<Email> delayed) {
 		this.port = port;
 		this.delayed = delayed;
 	}
-	
+
 	protected void start() {
 		String www = "Web/";
 		ServerSocket s;
@@ -177,6 +177,7 @@ public class WebServer {
 								if (block_date.length == 2 && (!block_date[1].equals(""))){
 									now = false;
 									String time_string = java.net.URLDecoder.decode(block_date[1], "UTF-8");
+									//We transform the string into a date object
 									DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 									sending_time = formatter.parse(time_string);
 									if (sending_time.before(new Date())){
@@ -207,6 +208,7 @@ public class WebServer {
 								}
 							}
 						}
+						//If the user didn't fill in every field
 						if (false_form == true){
 							error = true;
 							writeError(poutput, connection, 400, "Bad request", "Please fill in the field in the form.");
@@ -218,16 +220,20 @@ public class WebServer {
 							System.out.println("From: " + from + ", To: " + to + ", server: " + server);
 							System.out.println("Subject: " + subject);
 							System.out.println("Message: " + message);
-							
+
+							//If the message has to be sent now
 							if (now ==true){
 								String response = new_message.sendEmail();
 								System.out.println("Response of the sending :" + response);
 								//We send the response
 								writeSendingReponse(poutput, response);
 							} else {
-								this.delayed.add(new_message);
-								System.out.println("Sending planned");
-								writeReportedEmail(poutput, sending_time);
+								//We add the message in the delayed emails table
+								synchronized( this.delayed ) {
+									this.delayed.add(new_message);
+									System.out.println("Sending planned");
+									writeReportedEmail(poutput, sending_time);
+								}
 							}
 							output.flush();
 							connection.close();	
@@ -274,10 +280,10 @@ public class WebServer {
 		poutput.println("<html xmlns='http://www.w3.org/1999/xhtml'>");
 		poutput.println("<head>");
 		poutput.println("<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />");
-		poutput.println("<link rel='icon' type='image/x-icon' href='Assets/favicon.ico' />");
-		poutput.println("<script src='Assets/jquery-1.11.2.js'></script>");
-		poutput.println("<link href='Assets/bootstrap.min.css' rel='stylesheet'>");
-		poutput.println("<script src='Assets/bootstrap.min.js'></script>");
+		poutput.println("<link rel='icon' type='image/x-icon' href='favicon.ico' />");
+		poutput.println("<script src='jquery-1.11.2.js'></script>");
+		poutput.println("<link href='bootstrap.min.css' rel='stylesheet'>");
+		poutput.println("<script src='bootstrap.min.js'></script>");
 		poutput.println("<title> Webmail</title>");
 		poutput.println("</head>");
 		poutput.println("<body>");
@@ -303,17 +309,17 @@ public class WebServer {
 		poutput.println("<html xmlns='http://www.w3.org/1999/xhtml'>");
 		poutput.println("<head>");
 		poutput.println("<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />");
-		poutput.println("<link rel='icon' type='image/x-icon' href='Assets/favicon.ico' />");
-		poutput.println("<script src='Assets/jquery-1.11.2.js'></script>");
-		poutput.println("<link href='Assets/bootstrap.min.css' rel='stylesheet'>");
-		poutput.println("<script src='Assets/bootstrap.min.js'></script>");
+		poutput.println("<link rel='icon' type='image/x-icon' href='favicon.ico' />");
+		poutput.println("<script src='jquery-1.11.2.js'></script>");
+		poutput.println("<link href='bootstrap.min.css' rel='stylesheet'>");
+		poutput.println("<script src='bootstrap.min.js'></script>");
 		poutput.println("<title> Webmail</title>");
 		poutput.println("</head>");
 		poutput.println("<body>");
 		poutput.println("<div class = 'container well'>");
 		poutput.println("<h1>Admin page</h1>");
 		poutput.println("<hr>");
-		poutput.println("<table class='table'>");
+		poutput.println("<table class='table table-hover'>");
 		poutput.println("<thead>");
 		poutput.println("<tr>");
 		poutput.println("<th>From</th>");
@@ -339,8 +345,8 @@ public class WebServer {
 		poutput.println("</body>");
 		poutput.println("</html>");	
 	}
-	
-	
+
+
 	private static void writeReportedEmail(PrintStream poutput, Date sending_time){
 		poutput.println("HTTP/1.1 200 OK");
 		poutput.println("Content-Type: text/html; ; charset=utf-8");
@@ -349,10 +355,10 @@ public class WebServer {
 		poutput.println("<html xmlns='http://www.w3.org/1999/xhtml'>");
 		poutput.println("<head>");
 		poutput.println("<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />");
-		poutput.println("<link rel='icon' type='image/x-icon' href='Assets/favicon.ico' />");
-		poutput.println("<script src='Assets/jquery-1.11.2.js'></script>");
-		poutput.println("<link href='Assets/bootstrap.min.css' rel='stylesheet'>");
-		poutput.println("<script src='Assets/bootstrap.min.js'></script>");
+		poutput.println("<link rel='icon' type='image/x-icon' href='favicon.ico' />");
+		poutput.println("<script src='jquery-1.11.2.js'></script>");
+		poutput.println("<link href='bootstrap.min.css' rel='stylesheet'>");
+		poutput.println("<script src='bootstrap.min.js'></script>");
 		poutput.println("<title> Webmail</title>");
 		poutput.println("</head>");
 		poutput.println("<body>");
@@ -364,7 +370,7 @@ public class WebServer {
 		poutput.println("</body>");
 		poutput.println("</html>");	
 	}	
-	
+
 	//To find the right content type for the file extension
 	private String contentType(String extension) {
 		if (extension.equals("js")){
