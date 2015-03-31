@@ -147,12 +147,12 @@ public class WebServer {
 						boolean now = true;
 
 						//Default values for fields
-						String from = "default@kth.se";
-						String to = "default@kth.se";
+						String from = "";
+						String to = "";
 						Date sending_time = new Date();
 						String server = "";
-						String subject = "Message from test Webmail";
-						String message = "This is a default message.";
+						String subject = "";
+						String message = "";
 
 						//For each field we decode the post request and change the default value if it's not empty
 						for(String param : request_cut){

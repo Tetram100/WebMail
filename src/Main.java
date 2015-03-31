@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Main {
 
-	public static int web_port = 2001;
+	public static int web_port = 80;
 	
 	//We lunch the webserver
 	public static void main(String[] args) {

@@ -21,7 +21,7 @@ public class ThreadEmail extends Thread {
 						String response = email.sendEmail();
 						System.out.println("Response of the delayed sending: " + response);
 						//We send the notification email to the sender
-						Email notification = new Email("noreply@webmail.se", email.from, now, "127.0.0.1", 
+						Email notification = new Email("noreply@webmail.se", email.from, now, "", 
 								"Your message has successfully been sent", "Your message to " + email.to + " on our webmail has been sent at " + email.sending_time + 
 								". ");
 						String response_notify = notification.sendEmail();
