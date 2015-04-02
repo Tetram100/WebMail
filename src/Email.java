@@ -1,5 +1,7 @@
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Date;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -7,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.MXRecord;
 import org.xbill.DNS.Record;
@@ -67,7 +71,7 @@ public class Email {
 			readMessage(input, error, error_message);
 			poutput.println("From: " + this.from);
 			poutput.println("To: " + this.to);
-			String encode_subject = "Subject: =?ISO-8859-15?B?" + base64encode(this.subject) + "?=";
+			String encode_subject = "Subject: =?ISO-8859-15?B?" + encode(this.subject) + "?=";
 			poutput.println(encode_subject);
 			poutput.println("Content-Type: text/plain; charset='ISO-8859-15'");
 			poutput.println("Content-Transfer-Encoding: Base64");
@@ -148,21 +152,21 @@ public class Email {
 		}
 
 		// It takes the original binary data and operates on it by dividing it into tokens of three bytes
-		for (remainder = 0; remainder < message.length(); remainder += 3) {
+		for (int location = 0; location < message.length(); location += 3) {
 
-			// Newline characters are inserted to avoid exceeding any mail server's line length limit
-			if (remainder > 0 && (remainder / 3 * 4) % 76 == 0)
+			// Newline characters are inserted to avoid exceeding any mail server's line length limit. Supposed to be not mandatory anymore
+			if (location > 0 && (location / 3 * 4) % 76 == 0)
 				result += "\r\n";
 
 			// these three 8-bit (ASCII) characters become one 24-bit number
-			int n = (message.charAt(remainder) << 16) + (message.charAt(remainder + 1) << 8) + (message.charAt(remainder + 2));
+			// << and >> are the left and right shift operators 
+			int n = (message.charAt(location) << 16) + (message.charAt(location + 1) << 8) + (message.charAt(location + 2));
 
-			// We split the three bytes of n (24bits) into four numbers of six bits
-			int n1 = (n >> 18) & 63;
-			int n2 = (n >> 12) & 63;
-			int n3 = (n >> 6) & 63;
-			int n4 = n & 63;
-
+			// We split the three bytes of n (24bits) into four numbers of six bits (63 = 111111)
+			int n1 = (n >> 18) & 63; //first 6 bits
+			int n2 = (n >> 12) & 63; //second 6 bits
+			int n3 = (n >> 6) & 63; //third 6 bits 
+			int n4 = n & 63; //last 6 bits
 			// those four 6-bit numbers are used as indices into the 64 ASCII characters table
 			result += "" + base64Alphabet.charAt(n1) + base64Alphabet.charAt(n2) + base64Alphabet.charAt(n3) + base64Alphabet.charAt(n4);
 		}

@@ -13,7 +13,7 @@ public class ThreadEmail extends Thread {
 		while(true){
 			ArrayList<Email> sent = new ArrayList<Email>();
 			synchronized( this.delayed ) {
-				//We check every message to see if the sending time is exceded
+				//We check every message to see if the sending time is exceeded
 				for (Email email : this.delayed) {
 					Date now = new Date();
 					if (email.sending_time.before(now)){

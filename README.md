@@ -15,7 +15,7 @@ Then write "jar cvfm WebMail.jar META-INF/MANIFEST.MF -C bin/ ." to create the J
 
 How to configure
 -----------------------
-The jar file is ready to lunch and you have nothing to configure. But you still can change the default value of the SMTP server in the Email.java file (in case of MX lookup failure) and the ports of the web server and SMTP server in the Email.java and Main.java class.
+The jar file is ready to launch and you have nothing to configure. But you still can change the default value of the SMTP server in the Email.java file (in case of MX lookup failure) and the ports of the web server and SMTP server in the Email.java and Main.java class.
 
 
 How to run
@@ -26,4 +26,4 @@ The jar file must be launch in the same folder as the lib folder and the Web fol
 
 How to use
 -----------------------
-Just write your server IP on the browser and you will access to the web page. Everything is ovious from here.
+Just write your server IP on the browser and you will access to the web page. Everything is obvious from here.

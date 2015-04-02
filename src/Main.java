@@ -12,9 +12,9 @@ public class Main {
 		ArrayList<Email> delayed = new ArrayList<Email>();
 		Thread web_server = new ThreadWeb(delayed, web_port);
 		Thread email_check = new ThreadEmail(delayed);
-		//We lunch the web server
+		//We launch the web server
 		web_server.start();
-		//We lunch the thread that will send the delayed emails
+		//We launch the thread that will send the delayed emails
 		email_check.start();
 	}
 
