@@ -1,7 +1,5 @@
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Date;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -9,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.MXRecord;
@@ -80,6 +77,7 @@ public class Email {
 			poutput.println(encode(this.message));
 			poutput.println(".");
 			String final_response = readMessage(input, error, error_message);
+			//We check the final answer from the SMTP server
 			if(final_response.indexOf("Ok") != -1){
 				error = false;
 			}
